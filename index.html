@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AS ICON Premium Predictor</title>
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
+body{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:
+      radial-gradient(circle at top left,#1a0033,#050816 40%),
+      radial-gradient(circle at bottom right,#001f3f,#050816 50%);
+    color:#fff;
+    padding:15px;
+}
+.app{
+    width:100%;
+    max-width:420px;
+    background:rgba(255,255,255,0.05);
+    backdrop-filter:blur(16px);
+    border-radius:24px;
+    padding:20px;
+    box-shadow:0 0 35px rgba(0,255,255,0.15);
+    border:1px solid rgba(255,255,255,0.08);
+    animation:fadeIn 1s ease;
+}
+@keyframes fadeIn{
+    from{opacity:0; transform:translateY(20px);}
+    to{opacity:1; transform:translateY(0);}
+}
+.header{
+    text-align:center;
+}
+.logo{
+    width:75px;
+    height:75px;
+    margin:0 auto 12px;
+    border-radius:22px;
+    background:linear-gradient(135deg,#00f5ff,#8a2be2,#ff00c8);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:28px;
+    font-weight:bold;
+    box-shadow:0 0 25px #00f5ff;
+    animation:floatLogo 3s ease-in-out infinite;
+}
+@keyframes floatLogo{
+    0%,100%{transform:translateY(0);}
+    50%{transform:translateY(-8px);}
+}
+.app-name{
+    font-size:30px;
+    font-weight:bold;
+    background:linear-gradient(90deg,#00f5ff,#ff00c8,#ffd700);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    text-shadow:0 0 10px rgba(255,255,255,0.2);
+}
+.timer{
+    margin-top:10px;
+    font-size:20px;
+    color:#00f5ff;
+    text-shadow:0 0 10px #00f5ff;
+}
+.progress{
+    margin-top:10px;
+    height:8px;
+    background:rgba(255,255,255,0.08);
+    border-radius:20px;
+    overflow:hidden;
+}
+.progress-bar{
+    height:100%;
+    width:100%;
+    background:linear-gradient(90deg,#00f5ff,#00ff88,#ffd700);
+    box-shadow:0 0 10px #00ffcc;
+    transition:width 1s linear;
+}
+.period{
+    margin-top:8px;
+    font-size:13px;
+    color:#ccc;
+}
+.prediction-box{
+    margin-top:20px;
+    padding:25px;
+    text-align:center;
+    border-radius:20px;
+    background:rgba(255,255,255,0.04);
+    box-shadow: inset 0 0 20px rgba(255,255,255,0.03);
+}
+.prediction-type{
+    font-size:36px;
+    font-weight:bold;
+    margin-bottom:18px;
+    animation:pulse 1.5s infinite;
+}
+@keyframes pulse{
+    0%,100%{transform:scale(1);}
+    50%{transform:scale(1.08);}
+}
+.big{color:#00ffcc; text-shadow:0 0 15px #00ffcc;}
+.small{color:#ff66aa; text-shadow:0 0 15px #ff66aa;}
+
+.numbers{
+    display:flex;
+    justify-content:center;
+    gap:18px;
+    margin-bottom:15px;
+}
+.ball{
+    width:65px;
+    height:65px;
+    border-radius:50%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:24px;
+    font-weight:bold;
+    color:white;
+    box-shadow:0 0 20px rgba(255,255,255,0.4);
+    animation:spinGlow 3s linear infinite;
+}
+@keyframes spinGlow{
+    0%{transform:rotate(0deg) scale(1);}
+    50%{transform:rotate(180deg) scale(1.08);}
+    100%{transform:rotate(360deg) scale(1);}
+}
+.locked{
+    color:#00ff88;
+    font-size:15px;
+    text-shadow:0 0 10px #00ff88;
+}
+.history{
+    margin-top:25px;
+}
+.history h3{
+    color:#ffd700;
+    margin-bottom:10px;
+}
+.history-item{
+    display:flex;
+    justify-content:space-between;
+    padding:10px;
+    margin-bottom:8px;
+    border-radius:12px;
+    background:rgba(255,255,255,0.05);
+    animation:slideIn 0.4s ease;
+}
+@keyframes slideIn{
+    from{opacity:0; transform:translateX(-15px);}
+    to{opacity:1; transform:translateX(0);}
+}
+</style>
+</head>
+<body>
+<div class="app">
+    <div class="header">
+        <div class="logo">AS</div>
+        <div class="app-name">AS ICON</div>
+        <div class="timer">00:00</div>
+        <div class="progress"><div class="progress-bar"></div></div>
+        <div class="period">Period: --</div>
+    </div>
+
+    <div class="prediction-box">
+        <div class="prediction-type">--</div>
+        <div class="numbers"></div>
+        <div class="locked">Prediction Locked</div>
+    </div>
+
+    <div class="history">
+        <h3>Last 10 Predictions</h3>
+        <div id="historyList"></div>
+    </div>
+</div>
+
+<script>
+let historyData=[];
+
+function getPeriodNumber(date){
+    const yyyy=date.getUTCFullYear();
+    const mm=String(date.getUTCMonth()+1).padStart(2,'0');
+    const dd=String(date.getUTCDate()).padStart(2,'0');
+    const totalMinutes=date.getUTCHours()*60+date.getUTCMinutes();
+    return `${yyyy}${mm}${dd}1000${10001+totalMinutes}`;
+}
+function seededRandom(seed){
+    let x=Math.sin(seed)*10000;
+    return x-Math.floor(x);
+}
+function generatePrediction(period){
+    let seed=parseInt(period.slice(-6));
+    let rand=seededRandom(seed);
+    let type=rand>0.5?"BIG":"SMALL";
+    let numsPool=type==="BIG"?[5,6,7,8,9]:[0,1,2,3,4];
+    let first=numsPool[Math.floor(seededRandom(seed+1)*numsPool.length)];
+    let second=numsPool[Math.floor(seededRandom(seed+2)*numsPool.length)];
+    return {type,nums:[first,second]};
+}
+function ballColor(num){
+    const colors=["#ff4d4d","#ff9900","#ffd700","#00cc66","#00ccff","#3366ff","#9933ff","#ff33cc","#00ffaa","#ff6666"];
+    return colors[num];
+}
+function updateApp(){
+    const now=new Date();
+    const sec=now.getUTCSeconds();
+    const remaining=60-sec;
+
+    document.querySelector(".timer").innerText=`00:${String(remaining).padStart(2,'0')}`;
+    document.querySelector(".progress-bar").style.width=`${remaining/60*100}%`;
+
+    const period=getPeriodNumber(now);
+    document.querySelector(".period").innerText=`Period: ${period}`;
+
+    const prediction=generatePrediction(period);
+    const typeEl=document.querySelector(".prediction-type");
+    typeEl.innerText=prediction.type;
+    typeEl.className="prediction-type "+prediction.type.toLowerCase();
+
+    const numbersEl=document.querySelector(".numbers");
+    numbersEl.innerHTML="";
+    prediction.nums.forEach(n=>{
+        let div=document.createElement("div");
+        div.className="ball";
+        div.style.background=ballColor(n);
+        div.innerText=n;
+        numbersEl.appendChild(div);
+    });
+
+    if(!historyData.length || historyData[0].period!==period){
+        historyData.unshift({period,type:prediction.type,nums:prediction.nums});
+        historyData=historyData.slice(0,10);
+        renderHistory();
+    }
+}
+function renderHistory(){
+    const list=document.getElementById("historyList");
+    list.innerHTML="";
+    historyData.forEach(item=>{
+        let row=document.createElement("div");
+        row.className="history-item";
+        row.innerHTML=`<span>${item.period}</span><span class="${item.type.toLowerCase()}">${item.type} (${item.nums.join(", ")})</span>`;
+        list.appendChild(row);
+    });
+}
+updateApp();
+setInterval(updateApp,1000);
+</script>
+</body>
+</html>
